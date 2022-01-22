@@ -2,7 +2,6 @@ import me.masssh.kuake.gradle.Versions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    // kotlin
     kotlin("jvm") version Versions.kotlin
     id("org.jlleitschuh.gradle.ktlint") version Versions.ktlint
     id("io.gitlab.arturbosch.detekt") version Versions.detekt
