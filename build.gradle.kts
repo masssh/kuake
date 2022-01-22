@@ -32,6 +32,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("io.github.microutils:kotlin-logging:2.1.21")
+    runtimeOnly("dev.miku:r2dbc-mysql:0.8.2.RELEASE")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("org.assertj:assertj-core:3.12.0")
     testImplementation("ch.qos.logback:logback-classic:1.2.10")
