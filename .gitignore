@@ -1,0 +1,26 @@
+HELP.md
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+build/
+
+### HBase Test Utility ###
+target/
+
+### IntelliJ IDEA ###
+.idea/*
+!.idea/codeStyles/
+!.idea/copyright/
+!.idea/inspectionProfiles/
+!.idea/detekt.xml
+!.idea/externalDependencies.xml
+!.idea/watcherTasks.xml
+!.idea/saveactions_settings.xml
+*.iws
+*.iml
+*.ipr
+out/
+
+### VS Code ###
+.vscode/
