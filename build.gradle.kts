@@ -35,5 +35,4 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("org.assertj:assertj-core:3.12.0")
     testImplementation("ch.qos.logback:logback-classic:1.2.10")
-//    testImplementation("ch.qos.logback:logback-core:1.2.10")
 }
