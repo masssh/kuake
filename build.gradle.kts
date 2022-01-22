@@ -1,13 +1,12 @@
+import me.masssh.kuake.gradle.Versions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-buildscript {}
 
 plugins {
     // kotlin
-    kotlin("jvm") version "1.5.31"
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
-    id("io.gitlab.arturbosch.detekt") version "1.19.0-RC1"
-
+    kotlin("jvm") version Versions.kotlin
+    id("org.jlleitschuh.gradle.ktlint") version Versions.ktlint
+    id("io.gitlab.arturbosch.detekt") version Versions.detekt
+    id("io.spring.dependency-management") version Versions.dependencyManagement
     `java-library`
 }
 
@@ -29,11 +28,17 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("io.projectreactor:reactor-bom:${Versions.reactor}")
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("io.github.microutils:kotlin-logging:2.1.21")
-    runtimeOnly("dev.miku:r2dbc-mysql:0.8.2.RELEASE")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-    testImplementation("org.assertj:assertj-core:3.12.0")
-    testImplementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("io.github.microutils:kotlin-logging:${Versions.kotlinLogging}")
+    runtimeOnly("dev.miku:r2dbc-mysql:${Versions.r2dbcMysql}")
+    testImplementation("org.junit.jupiter:junit-jupiter:${Versions.junit}")
+    testImplementation("org.assertj:assertj-core:${Versions.assertj}")
+    testImplementation("ch.qos.logback:logback-classic:${Versions.logback}")
 }
