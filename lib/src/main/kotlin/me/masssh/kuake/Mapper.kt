@@ -8,20 +8,17 @@ import io.r2dbc.spi.RowMetadata
 import mu.KotlinLogging
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
-import kotlin.reflect.KClass
 
 class Mapper {
     private val log = KotlinLogging.logger {}
     private val connectionFactory = ConnectionFactories.get("r2dbc:mysql://testuser:testpass@127.0.0.1:3306/testdb")
 
-    inline fun <reified T : Any> kClass(): KClass<T> = T::class
-
-    fun execute(query: String): Flux<Map<String, String?>> {
+    fun execute(query: String): Flux<Map<String, Any?>> {
         log.info { query }
         return executeQuery(query)
     }
 
-    private fun executeQuery(query: String): Flux<Map<String, String?>> =
+    private fun executeQuery(query: String): Flux<Map<String, Any?>> =
         connectionFactory.use { connection ->
             connection.createStatement(query)
                 .execute()
@@ -31,13 +28,16 @@ class Mapper {
                 }
         }
 
-    private fun ConnectionFactory.use(
-        action: (Connection) -> Flux<Map<String, String?>>
-    ): Flux<Map<String, String?>> = Flux.usingWhen(this.create(), action, Connection::close)
+    private fun <T> ConnectionFactory.use(
+        action: (Connection) -> Flux<Map<String, T?>>
+    ): Flux<Map<String, T?>> = Flux.usingWhen(this.create(), action, Connection::close)
 
-    private fun createColumnMap(row: Row, rowMetaData: RowMetadata): Map<String, String?> = rowMetaData
+    private fun createColumnMap(
+        row: Row,
+        rowMetaData: RowMetadata
+    ): Map<String, Any?> = rowMetaData
         .columnNames.associateWith { columnName ->
-            row.get(columnName, String::class.java).also {
+            row.get(columnName).also {
                 log.info { "columnName=$columnName value=$it" }
             }
         }
