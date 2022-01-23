@@ -49,10 +49,9 @@ class Mapper(
     private fun createColumnMap(
         row: Row,
         rowMetaData: RowMetadata
-    ): Map<String, Any?> = rowMetaData
-        .columnNames.associateWith { columnName ->
-            row.get(columnName).also {
-                log.info { "columnName=$columnName value=$it" }
-            }
+    ): Map<String, Any?> = rowMetaData.columnNames.associateWith { columnName ->
+        row.get(columnName).also {
+            log.info { "columnName=$columnName value=$it" }
         }
+    }
 }
