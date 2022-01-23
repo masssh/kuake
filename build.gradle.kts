@@ -30,7 +30,7 @@ configure(allprojects) {
 
     kotlin {
         jvmToolchain {
-            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(JavaVersion.VERSION_17.toString()))
+            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(JavaVersion.VERSION_11.toString()))
         }
     }
 
