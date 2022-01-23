@@ -2,14 +2,12 @@ plugins {
     `java-library`
 }
 
-tasks.named<Test>("test") {
-    useJUnitPlatform()
-}
-
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
     implementation("io.github.microutils:kotlin-logging")
     implementation("io.r2dbc:r2dbc-spi")
     implementation("io.projectreactor:reactor-core")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     runtimeOnly("dev.miku:r2dbc-mysql")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core")
