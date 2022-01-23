@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.github.microutils:kotlin-logging")
     implementation("io.r2dbc:r2dbc-spi")
     implementation("io.projectreactor:reactor-core")

@@ -58,6 +58,7 @@ configure(allprojects) {
         }
         dependencies {
             dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:${V.kotlinxCoroutins}")
+            dependency("org.jetbrains.kotlin:kotlin-reflect:${V.kotlin}")
             dependency("io.github.microutils:kotlin-logging:${V.kotlinLogging}")
             dependency("io.r2dbc:r2dbc-spi:${V.r2dbc}")
             dependency("dev.miku:r2dbc-mysql:${V.r2dbc}")
