@@ -7,13 +7,27 @@ import io.r2dbc.spi.RowMetadata
 import mu.KotlinLogging
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
+import kotlin.reflect.KClass
+import kotlin.reflect.full.primaryConstructor
 
 class Mapper(
     private val connectionFactory: ConnectionFactory
 ) {
     private val log = KotlinLogging.logger {}
 
-    fun execute(query: String): Flux<Map<String, Any?>> {
+    fun selectObject(query: String, kClass: KClass<*>): Flux<Any> {
+        return executeQuery(query).flatMap { resultMap ->
+            kClass.primaryConstructor?.let { primaryConstructor ->
+                val paramMap = primaryConstructor.parameters.associateWith { kParam ->
+                    resultMap.getOrDefault(kParam.name!!, null)
+                }
+                @Suppress("UNCHECKED_CAST")
+                Flux.just(primaryConstructor.callBy(paramMap))
+            }
+        }.switchIfEmpty { throw IllegalArgumentException() }
+    }
+
+    fun selectMap(query: String): Flux<Map<String, Any?>> {
         log.info { query }
         return executeQuery(query)
     }
