@@ -28,12 +28,12 @@ class Mapper(
     }
 
     fun selectMap(query: String): Flux<Map<String, Any?>> {
-        log.info { query }
         return executeQuery(query)
     }
 
     private fun executeQuery(query: String): Flux<Map<String, Any?>> =
         connectionFactory.use { connection ->
+            log.info { query }
             connection.createStatement(query)
                 .execute()
                 .toFlux()
