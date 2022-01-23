@@ -1,7 +1,6 @@
 package me.masssh.kuake
 
 import io.r2dbc.spi.Connection
-import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
@@ -9,9 +8,10 @@ import mu.KotlinLogging
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
 
-class Mapper {
+class Mapper(
+    private val connectionFactory: ConnectionFactory
+) {
     private val log = KotlinLogging.logger {}
-    private val connectionFactory = ConnectionFactories.get("r2dbc:mysql://testuser:testpass@127.0.0.1:3306/testdb")
 
     fun execute(query: String): Flux<Map<String, Any?>> {
         log.info { query }
