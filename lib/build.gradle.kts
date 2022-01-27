@@ -9,9 +9,9 @@ dependencies {
     implementation("io.r2dbc:r2dbc-spi")
     implementation("io.projectreactor:reactor-core")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-    runtimeOnly("dev.miku:r2dbc-mysql")
+    testRuntimeOnly("dev.miku:r2dbc-mysql")
+    testRuntimeOnly("ch.qos.logback:logback-classic")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core")
-    testImplementation("ch.qos.logback:logback-classic")
     testImplementation("io.projectreactor:reactor-test")
 }
