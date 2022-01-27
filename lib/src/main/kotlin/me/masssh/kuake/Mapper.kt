@@ -2,11 +2,14 @@ package me.masssh.kuake
 
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.Result
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import mu.KotlinLogging
+import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toMono
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
@@ -15,41 +18,52 @@ class Mapper(
 ) {
     private val log = KotlinLogging.logger {}
 
-    fun selectObject(query: String, kClass: KClass<*>): Flux<Any> {
-        return executeQuery(query).flatMap { resultMap ->
-            kClass.primaryConstructor?.let { primaryConstructor ->
-                val paramMap = primaryConstructor.parameters.associateWith { kParam ->
-                    resultMap.getOrDefault(kParam.name!!, null)
-                }
-                @Suppress("UNCHECKED_CAST")
-                Flux.just(primaryConstructor.callBy(paramMap))
+    fun queryObject(query: String, kClass: KClass<*>) = queryInternal(query).flatMap { resultMap ->
+        kClass.primaryConstructor?.let { primaryConstructor ->
+            val paramMap = primaryConstructor.parameters.associateWith { kParam ->
+                resultMap.getOrDefault(kParam.name!!, null)
             }
-        }.switchIfEmpty { throw IllegalArgumentException() }
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val instance = primaryConstructor.callBy(paramMap)
+                Flux.just(instance)
+            } catch (e: Error) {
+                Flux.error<IllegalArgumentException> {
+                    IllegalArgumentException("query result has not enough columns for primary constructor of $kClass.")
+                }
+            }
+        } ?: Flux.error<IllegalArgumentException> {
+            IllegalArgumentException("$kClass has no primary constructor.")
+        }
     }
 
-    fun selectMap(query: String): Flux<Map<String, Any?>> {
-        return executeQuery(query)
+    fun queryMap(query: String) = queryInternal(query)
+
+    private fun queryInternal(query: String) = executeInternal(query) { result ->
+        result.map { row, rowMetaData -> createColumnMap(row, rowMetaData) }
     }
 
-    private fun executeQuery(query: String): Flux<Map<String, Any?>> =
+    fun execute(query: String) = executeInternal(query) { result ->
+        result.rowsUpdated
+    }.toMono()
+
+    private fun <T> executeInternal(query: String, processor: (Result) -> Publisher<T>): Flux<T> =
         connectionFactory.use { connection ->
             log.info { query }
             connection.createStatement(query)
                 .execute()
                 .toFlux()
-                .flatMap { result ->
-                    result.map { row, rowMetaData -> createColumnMap(row, rowMetaData) }
-                }
+                .flatMap(processor)
         }
 
     private fun <T> ConnectionFactory.use(
-        action: (Connection) -> Flux<Map<String, T?>>
-    ): Flux<Map<String, T?>> = Flux.usingWhen(this.create(), action, Connection::close)
+        action: (Connection) -> Flux<T>
+    ) = Flux.usingWhen(this.create(), action, Connection::close)
 
     private fun createColumnMap(
         row: Row,
         rowMetaData: RowMetadata
-    ): Map<String, Any?> = rowMetaData.columnNames.associateWith { columnName ->
+    ) = rowMetaData.columnNames.associateWith { columnName ->
         row.get(columnName).also {
             log.info { "columnName=$columnName value=$it" }
         }
