@@ -4,43 +4,41 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.Result
 import io.r2dbc.spi.Row
-import io.r2dbc.spi.RowMetadata
 import mu.KotlinLogging
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.primaryConstructor
 
-class Mapper(
+class KuakeClient(
     private val connectionFactory: ConnectionFactory
 ) {
     private val log = KotlinLogging.logger {}
 
-    fun queryObject(query: String, kClass: KClass<*>) = queryInternal(query).flatMap { resultMap ->
-        kClass.primaryConstructor?.let { primaryConstructor ->
-            val paramMap = primaryConstructor.parameters.associateWith { kParam ->
-                resultMap.getOrDefault(kParam.name!!, null)
-            }
+    fun queryObject(query: String, kClass: KClass<*>) = kClass.primaryConstructor?.let { primaryConstructor ->
+        val params = primaryConstructor.parameters
+        queryInternal(query, params).flatMap { columnMap ->
             try {
                 @Suppress("UNCHECKED_CAST")
-                val instance = primaryConstructor.callBy(paramMap)
+                val instance = primaryConstructor.callBy(columnMap)
                 Flux.just(instance)
             } catch (e: Error) {
-                Flux.error<IllegalArgumentException> {
-                    IllegalArgumentException("query result has not enough columns for primary constructor of $kClass.")
+                Flux.error<IllegalStateException> {
+                    IllegalStateException(
+                        "The query result=$columnMap has not enough columns for primary constructor of $kClass."
+                    )
                 }
             }
-        } ?: Flux.error<IllegalArgumentException> {
-            IllegalArgumentException("$kClass has no primary constructor.")
         }
+    } ?: Flux.error<IllegalStateException> {
+        IllegalStateException("$kClass has no primary constructor.")
     }
 
-    fun queryMap(query: String) = queryInternal(query)
-
-    private fun queryInternal(query: String) = executeInternal(query) { result ->
-        result.map { row, rowMetaData -> createColumnMap(row, rowMetaData) }
+    private fun queryInternal(query: String, resultParams: List<KParameter>) = executeInternal(query) { result ->
+        result.map { row, _ -> createColumnMap(row, resultParams) }
     }
 
     fun execute(query: String) = executeInternal(query) { result ->
@@ -62,10 +60,8 @@ class Mapper(
 
     private fun createColumnMap(
         row: Row,
-        rowMetaData: RowMetadata
-    ) = rowMetaData.columnNames.associateWith { columnName ->
-        row.get(columnName).also {
-            log.info { "columnName=$columnName value=$it" }
-        }
+        resultParams: List<KParameter>,
+    ) = resultParams.associateWith { param ->
+        param.name?.let { row[it] } ?: throw IllegalStateException("The field $param has no name.")
     }
 }
